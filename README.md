@@ -11,11 +11,11 @@ We identify three pillers to enable fast inference of SoTA AI models on your CPU
 
 This project aims to address the third using LLaMa.cpp and GGML.
 
-## Tentative Guiding Principles
+## Guiding Principles
 
-- Moar Speed. Focus on inference, not training.
+- Inference Speed! Focus on inference, not training.
 - Precompressed models.
-- Minimal setup required - `pip install cformers` and you are good to go.
+- Minimal setup required - soon `pip install cformers` should be good to get started.
 - Easily switch between models and quantization types.
 - Support variety of prompts.
 
@@ -30,6 +30,8 @@ git clone https://github.com/nolanoOrg/cformers.git
 cd cformers/cformers/cpp && make && cd ..
 python -c
 ```
+
+We are working on adding support for `pip install cformers.`
 
 ## Coming Soon:
 
@@ -103,11 +105,11 @@ You can also contribute to LLaMa.cpp and we will port those niceties here.
 
 ## Known Limitations (We are fixing this ASAP.)
 
-This is currently 3-4 times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa because of the way we are calling the C++ kernels from Python.
+This is currently a bit times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa because of the way we are calling the C++ kernels from Python.
 
-We are creating pybindings over the C++ kernels and calling them from Python to speed this up.
+We are creating pybindings over the C++ kernels and calling them from Python to speed this up and provide a better interface over the C++ kernels.
 
-We would love to hear from you various ways in which we can speed this up.
+We would love to hear from you various ways in which we can speed this up or improve the interface to make this more usable.
 
 ## License
 MIT License
