@@ -43,20 +43,25 @@ class ModelUrlMap:
         else:
             raise ValueError("Invalid mode: {}".format(mode))
 
-        if self.url == "":
+        if url == "":
             raise ValueError("{} not available for this model, please choose from: {}".format(mode, self.get_modes()))
         return url
         
     def get_modes(self):
-        return [mode for mode in ["int4_fixed_zero", "int4_variable_zero", "gptq_int4_fixed_zero", "gptq_int4_variable_zero"] if self.get(mode) != ""]
+        return [
+            mode for mode_str, mode in [("int4_fixed_zero", self.int4_fixed_zero),
+                                        ("int4_variable_zero", self.int4_variable_zero),
+                                        ("gptq_int4_fixed_zero", self.gptq_int4_fixed_zero),
+                                        ("gptq_int4_variable_zero", self.gptq_int4_variable_zero)]
+            if mode_str != ""]
 
-MAP_MODEL_TO_URL = { # Replace "/" with "---" in the model name
+MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
     'EleutherAI/gpt-j-6B': ModelUrlMap(
         cpp_model_name="gptj",
-        int4_fixed_zero="https://huggingface.co/ayushk4/EleutherAI---gpt-j-6B/resolve/main/int4_fixed_zero.bin"),
+        int4_fixed_zero="https://huggingface.co/ayushk4/EleutherAI-.-gpt-j-6B/resolve/main/int4_fixed_zero.bin"),
     'bigscience/bloom-7b1': ModelUrlMap(
         cpp_model_name="bloom",
-        int4_fixed_zero="https://huggingface.co/ayushk4/bigscience---bloom-7b1/resolve/main/int4_fixed_zero.bin"),
+        int4_fixed_zero="https://huggingface.co/ayushk4/bigscience-.-bloom-7b1/resolve/main/int4_fixed_zero.bin"),
 }
 
 class AutoInference:

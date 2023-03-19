@@ -22,12 +22,13 @@ This repo is focussed on addressing the third one.
 And most importantly:
 - You, the users, get to decide which direction we take this project.
 
-## Installation
+## Usage
 
 ```bash
 git clone https://github.com/nolanoOrg/cformers.git
-cd cformers
-pip install -e .
+cd cformers/cpp && make && cd ..
+python -c
+
 ```
 
 ## Coming Soon:
