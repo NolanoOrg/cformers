@@ -5,11 +5,11 @@ Fast inference of SoTA AI Models on your CPU.
 ## Introduction
 
 We identify three pillers to enable fast inference of SoTA AI models on your CPU:
-1. Fast C/C++ inference kernels utilizing SIMD - like GGML, LLaMa.cpp
-2. Machine Learning Research & Exploration front - Compression through quantization, sparsification, training on more data, collecting data and training instruction & chat models - like Open-Assistant, Open-Chat-Kit, etc.
+1. Fast C/C++ LLM inference kernels for CPU.
+2. Machine Learning Research & Exploration front - Compression through quantization, sparsification, training on more data, collecting data and training instruction & chat models.
 3. Easy to use API for fast AI inference in dynamically typed language like Python.
 
-This repo is focussed on addressing the third one.
+This project aims to address the third using LLaMa.cpp and GGML.
 
 ## Tentative Guiding Principles
 
@@ -25,10 +25,10 @@ And most importantly:
 ## Usage
 
 ```bash
+pip install transformers wget
 git clone https://github.com/nolanoOrg/cformers.git
-cd cformers/cpp && make && cd ..
+cd cformers/cformers/cpp && make && cd ..
 python -c
-
 ```
 
 ## Coming Soon:
@@ -36,10 +36,13 @@ python -c
 Features:
 - [X] Switch between models
 - [ ] Chat-mode (interactive mode)
-- [ ] Support for more prompts
+- [ ] Various tools to support Prompt-engineering, chaining, saving and sharing.
 
-Code-base (for dev-sanity)
-- Reuse the code wherever possible.
+Code-base restructuring:
+- [ ] Switch to Pybind11 rather than Subprocess - expected speedup: 3-4x
+- [ ] Structure the codebase to reuse, wherever possible.
+- [ ] Figure out a way to create llama.cpp as a git-submodule/dependency.
+
 
 ## Models
 
@@ -72,23 +75,21 @@ We encourage contributions from the community.
 - Let us know what features you want, what models you want to use.
 - Reporting bugs, raising issues and sending Pull Requests.
 
-
 ### Easy first issues:
 Following are some easy first issues ways in which you can help improve CTransformers:
 - Pick an existing HF model, quantize it, upload to HF and add it to the mapping in `ctransformers/map_model_to_url.py`
 - Add support for new models.
 - Add support for new quantization types.
-- Add pipelines (Prompts) for various tasks - sentiment, summarization, email writing, etc.
 
-### Issues on Machine Learning exploration (low-key research) side:
-- Try out GPTQ on these models and upload the resulting models to HF. [TODO: Link to Issue]
-- Benchmark the quantized models. [TODO: Link to Issue]
-- Can we merge Query and Key Matrices for GPT-J/LLaMa? [TODO: Link to Issue]
-- Explore CALM (Confident Adaptive Language Modelling) with 4-bit precision models [TODO: Link to Issue]
-- Saving Keys and Values in memory at lower precision (refer FlexGen) [TODO: Link to Issue]
-- Try out other quantization techniques like proxy quantization, etc. [TODO: Link to Issue]
-- Explore SparseGPT [TODO: Link to Issue]
-- Explore Quantization of Multimodal Models [TODO: Link to Issue]
+### Issues on Machine Learning side (some are exploratory):
+- Try out GPTQ on these models and upload the resulting models to HF.
+- Benchmark the quantized models. [#2](https://github.com/NolanoOrg/cformers/issues/2)
+- Can we merge Query and Key Matrices for GPT-J/LLaMa? [#3](https://github.com/NolanoOrg/cformers/issues/3)
+- Explore CALM (Confident Adaptive Language Modelling) with 4-bit precision models [#4](https://github.com/NolanoOrg/cformers/issues/4)
+- Saving Keys and Values in memory at lower precision (refer FlexGen) [#6](https://github.com/NolanoOrg/cformers/issues/6)
+- Try out other quantization techniques like proxy quantization, etc.
+- Explore SparseGPT [#5](https://github.com/NolanoOrg/cformers/issues/5)
+- Explore Quantization of Multimodal Models
 
 ### Non-Python side
 If you are allergic to Python, you can:
@@ -100,12 +101,11 @@ You can also contribute to LLaMa.cpp and we will port those niceties here.
 - Add Int3 and Int2 quantization support to GGML/LLaMa.cpp
 - Add fast Ampere-sparse quantized matrix multiplication functions in GGML/LLaMa.cpp
 
+## Known Limitations (We are fixing this ASAP.)
 
-## Known Limitations (We are fixing this.)
+This is currently 3-4 times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa because of the way we are calling the C++ kernels from Python.
 
-This is currently 3-4 times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa.
-
-We are creating bindings over the C++ kernels and calling them from Python to speed this up.
+We are creating pybindings over the C++ kernels and calling them from Python to speed this up.
 
 We would love to hear from you various ways in which we can speed this up.
 

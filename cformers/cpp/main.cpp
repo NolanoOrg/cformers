@@ -1696,6 +1696,11 @@ int main(int argc, char ** argv) {
     // params.model = "models/ggml-model-bloomz-7b1-f16-q4_0.bin";
     // params.prompt = "Je vais";
 
+    // loop through argv and print all the arguments, one per line
+    for (int i = 0; i < argc; i++) {
+        printf("argv[%d] = %s\n", i, argv[i]);
+    }
+
     if (gpt_params_parse(argc, argv, params) == false) {
         return 1;
     }
