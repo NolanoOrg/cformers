@@ -113,7 +113,7 @@ You can also contribute to LLaMa.cpp and we will port those niceties here.
 
 ## Known Limitations (We are fixing this ASAP.)
 
-This is currently a bit times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa because of the way we are calling the C++ kernels from Python.
+Current implementation is about 2 times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa because of the way we are calling the C++ kernels from Python.
 
 We are creating pybindings over the C++ kernels and calling them from Python to speed this up and provide a better interface over the C++ kernels.
 
