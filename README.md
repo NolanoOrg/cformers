@@ -28,10 +28,18 @@ And most importantly:
 pip install transformers wget
 git clone https://github.com/nolanoOrg/cformers.git
 cd cformers/cformers/cpp && make && cd ..
-python -c
+python
+    >>> from interface import AutoInference as AI
+    >>> ai = AI('EleutherAI/gpt-j-6B')
+    >>> x = ai.generate('def parse_html(html_doc):', num_tokens_to_generate=500)
+    >>> print(x['token_str'])
 ```
 
 We are working on adding support for `pip install cformers.`
+
+Currently following huggingface models are supported:
+- EleutherAI/gpt-j-6B
+- BigScience/bloom-7b1
 
 ## Coming Soon:
 

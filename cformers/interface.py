@@ -138,7 +138,8 @@ class AutoInference:
 
             # Check if the line is empty or matches the end marker
             if '<END|>' in all_stdout_so_far:
-                print('\n------------------\n')
+                if print_streaming_output:
+                    print('\n------------------\n')
                 break
 
             # # Also check for errors
@@ -146,7 +147,7 @@ class AutoInference:
             # if err:
             #     raise Exception(err)
 
-        print('\n' + '-'*30, all_stdout_so_far, '-'*30 + '\n')
+        # print('\n' + '-'*30, all_stdout_so_far, '-'*30 + '\n')
         # return all_stdout_so_far
         token_line = re.findall(r'<\|BEGIN\>(.*?)<END\|>', all_stdout_so_far, re.DOTALL)[0]
 
@@ -157,5 +158,7 @@ class AutoInference:
         decoded_tokens = self.tokenizer.decode(all_tokens)
 
         # Wait for the process to finish and return its exit code
-        return (process.wait(), all_tokens, decoded_tokens)
+        return {"success": process.wait(),
+                "token_ids": all_tokens,
+                "token_str": decoded_tokens}
         
