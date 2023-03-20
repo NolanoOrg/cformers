@@ -65,6 +65,9 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
     'bigscience/bloom-7b1': ModelUrlMap(
         cpp_model_name="bloom",
         int4_fixed_zero="https://huggingface.co/ayushk4/bigscience-.-bloom-7b1/resolve/main/int4_fixed_zero.bin"),
+    'OpenAssistant/oasst-sft-1-pythia-12b': ModelUrlMap(
+        cpp_model_name="gptneox",
+        int4_fixed_zero="https://huggingface.co/ayushk4/OpenAssistant-.-oasst-sft-1-pythia-12b/resolve/main/int4_fixed_zero.bin"),
 }
 
 class AutoInference:
@@ -157,8 +160,16 @@ class AutoInference:
         # Decode the tokens
         decoded_tokens = self.tokenizer.decode(all_tokens)
 
+        # Get the exit code
+        success = process.wait()
+        # Kill the child process if it's still running
+        if process.poll() is None:
+            process.kill()
+            # wait for the process to terminate
+            process.wait()
+
         # Wait for the process to finish and return its exit code
-        return {"success": process.wait(),
+        return {"success": success,
                 "token_ids": all_tokens,
                 "token_str": decoded_tokens}
         
