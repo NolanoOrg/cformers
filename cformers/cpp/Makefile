@@ -180,7 +180,7 @@ $(info I CC:       $(CCV))
 $(info I CXX:      $(CXXV))
 $(info )
 
-default: main quantizeBloom quantizeGPTJ
+default: main quantizeBloom quantizeGPTJ quantizeGPT2
 
 #
 # Build library
@@ -193,7 +193,7 @@ utils.o: utils.cpp utils.h
 	$(CXX) $(CXXFLAGS) -c utils.cpp -o utils.o
 
 clean:
-	rm -f *.o main quantizeBloom quantizeGPTJ
+	rm -f *.o main quantizeBloom quantizeGPTJ quantizeGPT2
 
 main: main.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) main.cpp ggml.o utils.o -o main $(LDFLAGS)
@@ -204,6 +204,9 @@ quantizeBloom: quantize_bloom.cpp ggml.o utils.o
 
 quantizeGPTJ: quantize_gptj.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) quantize_gptj.cpp ggml.o utils.o -o quantize_gptj $(LDFLAGS)
+
+quantizeGPT2: quantize_gpt2.cpp ggml.o utils.o
+	$(CXX) $(CXXFLAGS) quantize_gpt2.cpp ggml.o utils.o -o quantize_gpt2 $(LDFLAGS)
 #
 # Tests
 #
