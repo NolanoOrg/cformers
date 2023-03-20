@@ -124,4 +124,4 @@ MIT License
 
 ## Communication and Support
 
-Discord: https://discord.gg/peBU7yWa
+Discord: https://discord.gg/HGujTPQtR6
