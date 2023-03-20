@@ -1,13 +1,16 @@
 """Call's the C++ code from Python."""
 from subprocess import Popen, PIPE
 import hashlib
+import re
 import os
 import sys
-import transformers as tf # RIP TensorFlow
 import select
+import wget
+
+import transformers as tf # RIP TensorFlow
 
 sys.path.append("./cpp/")
-
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 # Get CFORMERS_CACHE_PATH if it exists as an environment variable else use the default
 if "CFORMERS_CACHE_PATH" in os.environ:
     CFORMERS_CACHE_PATH = os.environ["CFORMERS_CACHE_PATH"]
@@ -69,7 +72,7 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
 
 class AutoInference:
     """A wrapper for the C++ model."""
-    def __init__(self, model_name, hash_sum, mode="int4_fixed_zero"):
+    def __init__(self, model_name, hash_sum="", mode="int4_fixed_zero"):
         self.model_name = model_name
         self.mode = mode
         self.hash_sum = hash_sum
@@ -80,9 +83,18 @@ class AutoInference:
 
         # Download the model if it doesn't exist
         if not os.path.exists(self.model_save_path):
+            # Create the directory if it doesn't exist
+            parent_dir = os.path.dirname(self.model_save_path)
+            if not os.path.exists(parent_dir):
+                os.makedirs(parent_dir)
             print("Downloading model...")
-            tf.file_utils.cached_path(self.model_url, cache_dir=self.model_save_path)
+            def bar_progress(current, total, width=80):
+                progress_message = "Downloading: %d%% [%d / %d] bytes" % (current / total * 100, current, total)
+                sys.stdout.write("\r" + progress_message)
+                sys.stdout.flush()
+            wget.download(self.model_url, self.model_save_path, bar=bar_progress)
 
+            print("Download complete!")
         # TODO: Check the hash sum of the downloaded model
 
     def generate(self,
@@ -99,7 +111,7 @@ class AutoInference:
         """Generates text from the given prompt."""
         if isinstance(prompt, str):
             # Tokenize and get the input ids
-            prompt = self.tokenizer.encode(prompt)['input_ids']
+            prompt = self.tokenizer.encode_plus(prompt)['input_ids']
         # By now prompt should be a list of integers, sanity check this once
         assert isinstance(prompt, list), f"Prompt should be a list of integers: {prompt}"
         assert all([isinstance(x, int) for x in prompt]), \
@@ -107,28 +119,49 @@ class AutoInference:
         # Convert to a string of space separated integers
         prompt = " ".join([str(x) for x in prompt])
 
-        process = Popen(["./cpp/main", self.cpp_model_name,
-                         "-m", self.cpp_model_name,
-                         "--prompt", prompt,
-                         "--seed", str(seed),
-                         "--threads", str(n_threads),
-                         "--n_predict", str(num_tokens_to_generate),
-                         "--top_k", str(top_k),
-                         "--top_p", str(top_p),
-                         "--temp", str(temperature),
-                         "--repeat_last_n", str(repeat_last_n),
-                         "--repeat_penalty", str(repeat_penalty)],
-                        stdout=PIPE, stderr=PIPE)
+        command = ["./cpp/main", self.cpp_model_name,
+                   "-m", self.model_save_path,
+                   "--prompt", prompt,
+                   "--seed", str(seed),
+                   "--threads", str(n_threads),
+                   "--n_predict", str(num_tokens_to_generate),
+                   "--top_k", str(top_k),
+                   "--top_p", str(top_p),
+                   "--temp", str(temperature),
+                   "--repeat_last_n", str(repeat_last_n),
+                   "--repeat_penalty", str(repeat_penalty)]
+        print(" ".join(command))
 
-        while True:
-            # Wait for data to be available on the process's standard output stream
-            select.select([process.stdout.fileno()], [], [])
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        all_stdout_so_far = ""
+        for c in iter(lambda: process.stdout.read(1), b""):
+            if print_streaming_output:
+                sys.stdout.buffer.write(c)
+            all_stdout_so_far += c.decode('utf-8')
 
-            # Read available data from the stream and print it to the console
-            output = process.stdout.readline().decode('utf-8')
-            if output == '' and process.poll() is not None:
+            # Check if the line is empty or matches the end marker
+            if '<END|>' in all_stdout_so_far:
+                if print_streaming_output:
+                    print('\n------------------\n')
                 break
-            print(output.strip())
+
+            # # Also check for errors
+            # err = process.stderr.readline().decode('utf-8').strip()
+            # if err:
+            #     raise Exception(err)
+
+        # print('\n' + '-'*30, all_stdout_so_far, '-'*30 + '\n')
+        # return all_stdout_so_far
+        token_line = re.findall(r'<\|BEGIN\>(.*?)<END\|>', all_stdout_so_far, re.DOTALL)[0]
+
+        # Convert the token_line to a list of integers
+        all_tokens = [int(x) for x in token_line.split()]
+
+        # Decode the tokens
+        decoded_tokens = self.tokenizer.decode(all_tokens)
 
         # Wait for the process to finish and return its exit code
-        return process.wait()
+        return {"success": process.wait(),
+                "token_ids": all_tokens,
+                "token_str": decoded_tokens}
+        
