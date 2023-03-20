@@ -67,7 +67,7 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
         int4_fixed_zero="https://huggingface.co/ayushk4/bigscience-.-bloom-7b1/resolve/main/int4_fixed_zero.bin"),
     'gpt2': ModelUrlMap(
         cpp_model_name="gpt2",
-        int4_fixed_zero="https://huggingface.co/kamalojasv/gpt2_int4_fixes_zero/resolve/main/model-quant.bin"),
+        int4_fixed_zero="https://huggingface.co/kamalojasv/gpt2_int4_fixes_zero/resolve/main/int4_fixed_zero.bin"),
 }
 
 class AutoInference:
