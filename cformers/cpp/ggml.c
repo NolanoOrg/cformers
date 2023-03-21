@@ -2065,6 +2065,7 @@ static const char * GGML_OP_LABEL[GGML_OP_COUNT] = {
     "DIAG_MASK_INF",
     "SOFT_MAX",
     "ROPE",
+    "GPTNEOX_ROPE",
     "CONV_1D_1S",
     "CONV_1D_2S",
 
@@ -2072,7 +2073,7 @@ static const char * GGML_OP_LABEL[GGML_OP_COUNT] = {
     "FLASH_FF",
 };
 
-static_assert(GGML_OP_COUNT == 35, "GGML_OP_COUNT != 35");
+static_assert(GGML_OP_COUNT == 36, "GGML_OP_COUNT != 36");
 
 static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "none",
@@ -2108,6 +2109,7 @@ static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "diag_mask_inf(x)",
     "soft_max(x)",
     "rope(x)",
+    "gptneox_rope(x)",
     "conv_1d_1s(x)",
     "conv_1d_2s(x)",
 
@@ -2115,7 +2117,7 @@ static const char * GGML_OP_SYMBOL[GGML_OP_COUNT] = {
     "flash_ff(x)",
 };
 
-static_assert(GGML_OP_COUNT == 35, "GGML_OP_COUNT != 35");
+static_assert(GGML_OP_COUNT == 36, "GGML_OP_COUNT != 36");
 
 //
 // ggml object
@@ -4032,6 +4034,39 @@ struct ggml_tensor * ggml_rope(
     ((int32_t *) b->data)[2] = mode;
 
     result->op   = GGML_OP_ROPE;
+    result->grad = is_node ? ggml_dup_tensor(ctx, result) : NULL;
+    result->src0 = a;
+    result->src1 = b;
+
+    return result;
+}
+
+// ggml_gptneox_rope
+
+struct ggml_tensor * ggml_gptneox_rope(
+        struct ggml_context * ctx,
+        struct ggml_tensor  * a,
+        int                   n_past,
+        int                   n_dims,
+        int                   mode) {
+    GGML_ASSERT(n_past >= 0);
+    bool is_node = false;
+
+    if (a->grad) {
+        GGML_ASSERT(false); // TODO: implement backward
+        is_node = true;
+    }
+
+    // TODO: when implement backward, fix this:
+    //struct ggml_tensor * result = inplace ? ggml_view_tensor(ctx, a) : ggml_dup_tensor(ctx, a);
+    struct ggml_tensor * result = ggml_view_tensor(ctx, a);
+
+    struct ggml_tensor * b = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, 3);
+    ((int32_t *) b->data)[0] = n_past;
+    ((int32_t *) b->data)[1] = n_dims;
+    ((int32_t *) b->data)[2] = mode;
+
+    result->op   = GGML_OP_GPTNEOX_ROPE;
     result->grad = is_node ? ggml_dup_tensor(ctx, result) : NULL;
     result->src0 = a;
     result->src1 = b;
@@ -7226,6 +7261,136 @@ static void ggml_compute_forward_rope(
     }
 }
 
+// ggml_compute_forward_gptneox_rope_f32
+
+// def gptneox_rope_single(query, dim, offset, base=10000):
+//     query is of the shape [batch, num_heads, seq_len, head_dim]
+//     device = query.device
+//     assert dim == query.shape[-1]
+//     _, dim_by_2 = query.shape[-1], query.shape[-1]//2
+//     inv_freq = 1.0 / (base ** (torch.arange(0, dim, 2).float().to(device) / dim))
+//     print(inv_freq.shape, dim, dim_by_2)
+//     query_temp = query * 0
+//     query_temp[..., :dim_by_2] = (
+//         query[...,:dim_by_2] * torch.cos(
+//             torch.outer(torch.arange(offset, offset + query.shape[-2]), inv_freq).unsqueeze(0).unsqueeze(0)
+//         ) - \
+//         query[..., dim_by_2:] * torch.sin(
+//             torch.outer(torch.arange(offset, offset + query.shape[-2]), inv_freq).unsqueeze(0).unsqueeze(0)
+//         )
+//     )
+//     query_temp[..., dim_by_2:] = (
+//         query[..., dim_by_2:] * torch.cos(
+//             torch.outer(torch.arange(offset, offset + query.shape[-2]), inv_freq).unsqueeze(0).unsqueeze(0)
+//         ) + \
+//         query[..., :dim_by_2] * torch.sin(
+//             torch.outer(torch.arange(offset, offset + query.shape[-2]), inv_freq).unsqueeze(0).unsqueeze(0)
+//         )
+//     )
+//     return query_temp
+
+static void ggml_compute_forward_gptneox_rope_f32(
+        const struct ggml_compute_params * params,
+        const struct ggml_tensor * src0,
+        const struct ggml_tensor * src1,
+        struct ggml_tensor * dst) {
+    assert(params->ith == 0);
+    assert(src1->type == GGML_TYPE_I32);
+    assert(ggml_nelements(src1) == 3);
+
+    if (params->type == GGML_TASK_INIT || params->type == GGML_TASK_FINALIZE) {
+        return;
+    }
+
+    const int n_past = ((int32_t *) src1->data)[0];
+    const int n_dims = ((int32_t *) src1->data)[1];
+    const int mode   = ((int32_t *) src1->data)[2];
+
+    // src0 is the query tensor (or key/value tensor)
+    const int ne0 = src0->ne[0]; // This is the final dimension (head_dim)
+    const int ne1 = src0->ne[1]; // This is the number of heads
+    const int ne2 = src0->ne[2]; // This is the sequence length
+    const int ne3 = src0->ne[3]; // This is the batch size
+
+    const int nb0 = src0->nb[0]; // This is the number of bytes per element
+    const int nb1 = src0->nb[1]; // This is the number of bytes per head (head_dim * nb0)
+    const int nb2 = src0->nb[2]; // This is the number of bytes per sequence (seq_len * nb1)
+    const int nb3 = src0->nb[3]; // This is the number of bytes per batch (batch_size * nb2)
+
+    // printf("ne0: %d, ne1: %d, ne2: %d, ne3: %d\n", ne0, ne1, ne2, ne3);
+    // printf("nb0: %d, nb1: %d, nb2: %d, nb3: %d\n", nb0, nb1, nb2, nb3);
+    // printf("n_past = %d, n_dims = %d, mode = %d\n", n_past, n_dims, mode);
+
+    assert(nb0 == sizeof(float));
+
+    // TODO: optimize
+    for (int i3 = 0; i3 < ne3; i3++) {
+        for (int i2 = (mode == 0 ? 0 : n_past); i2 < ne2; i2++) {
+            const int p = (mode == 0 ? n_past + i2 : i2);
+            for (int i1 = 0; i1 < ne1; i1++) {
+                // For the first half of the dimensions of src0.
+                for (int i0 = 0; i0 < n_dims / 2; i0++) {
+                    const double theta = pow(10000.0, 2 * ((double)-i0) / n_dims);
+
+                    const double cos_theta = cos(p*theta);
+                    const double sin_theta = sin(p*theta);
+
+                    const float * const src0_data1 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
+                    const float * const src0_data2 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + (i0 + n_dims / 2) * nb0);
+                          float * dst_data         = (float *) ((char *) dst->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
+
+                    double x1 = src0_data1[0];
+                    double x2 = src0_data2[0];
+
+                    dst_data[0] = (float) (cos_theta * x1 - sin_theta * x2);
+                }
+                // For the second half of the dimensions of src0.
+                for (int i0 = n_dims / 2; i0 < n_dims; i0++) {
+                    const double theta = pow(10000.0, 2 * ((double)-i0) / n_dims);
+
+                    const double cos_theta = cos(p*theta);
+                    const double sin_theta = sin(p*theta);
+
+                    const float * const src0_data1 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
+                    const float * const src0_data2 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + (i0 - n_dims / 2) * nb0);
+                          float * dst_data         = (float *) ((char *) dst->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
+
+                    double x1 = src0_data1[0];
+                    double x2 = src0_data2[0];
+
+                    dst_data[0] = (float) (cos_theta * x1 + sin_theta * x2);
+                }
+            }
+        }
+    }
+}
+
+static void ggml_compute_forward_gptneox_rope(
+        const struct ggml_compute_params * params,
+        const struct ggml_tensor * src0,
+        const struct ggml_tensor * src1,
+        struct ggml_tensor * dst) {
+    switch (src0->type) {
+        case GGML_TYPE_F16:
+            {
+                assert(false);
+                // ggml_compute_forward_gptneox_rope_f16(params, src0, src1, dst);
+            } break;
+        case GGML_TYPE_F32:
+            {
+                ggml_compute_forward_gptneox_rope_f32(params, src0, src1, dst);
+            } break;
+        case GGML_TYPE_Q4_0:
+        case GGML_TYPE_Q4_1:
+        case GGML_TYPE_I8:
+        case GGML_TYPE_I16:
+        case GGML_TYPE_I32:
+        case GGML_TYPE_COUNT:
+            {
+                GGML_ASSERT(false);
+            } break;
+    }
+}
 
 // ggml_compute_forward_alibi
 
@@ -8738,6 +8903,10 @@ static void ggml_compute_forward(struct ggml_compute_params * params, struct ggm
             {
                 ggml_compute_forward_rope(params, tensor->src0, tensor->src1, tensor);
             } break;
+        case GGML_OP_GPTNEOX_ROPE:
+            {
+                ggml_compute_forward_gptneox_rope(params, tensor->src0, tensor->src1, tensor);
+            } break;
         case GGML_OP_ALIBI:
             {
                 ggml_compute_forward_alibi(params, tensor->src0, tensor->src1, tensor);
@@ -8992,6 +9161,10 @@ static void ggml_compute_backward(struct ggml_context * ctx, struct ggml_tensor 
                 GGML_ASSERT(false); // TODO: not implemented
             } break;
         case GGML_OP_ROPE:
+            {
+                GGML_ASSERT(false); // TODO: not implemented
+            } break;
+        case GGML_OP_GPTNEOX_ROPE:
             {
                 GGML_ASSERT(false); // TODO: not implemented
             } break;
@@ -9460,6 +9633,10 @@ void ggml_graph_compute(struct ggml_context * ctx, struct ggml_cgraph * cgraph) 
                         node->n_tasks = n_threads;
                     } break;
                 case GGML_OP_ROPE:
+                    {
+                        node->n_tasks = 1;
+                    } break;
+                case GGML_OP_GPTNEOX_ROPE:
                     {
                         node->n_tasks = 1;
                     } break;

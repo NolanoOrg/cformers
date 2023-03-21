@@ -2169,8 +2169,8 @@ bool gptneox_eval(
     // wte
     struct ggml_tensor * inpL = ggml_get_rows(ctx0, model.wte, embd);
 
-    for (int il = 0; il < 1; ++il) {
-    // for (int il = 0; il < n_layer; ++il) {
+    // for (int il = 0; il < 1; ++il) {
+    for (int il = 0; il < n_layer; ++il) {
         struct ggml_tensor * cur;
 
         // input norm
@@ -2214,23 +2214,23 @@ bool gptneox_eval(
             // Q = Qcur.contiguous().view(n_embd/n_head, n_head, N).permute(0, 2, 1, 3)
             struct ggml_tensor * Q =
                 ggml_permute(ctx0,
-                        // ggml_rope(ctx0,
+                        ggml_gptneox_rope(ctx0,
                             ggml_cpy(ctx0,
                                 Qcur,
                                 ggml_new_tensor_3d(ctx0, GGML_TYPE_F32, n_embd/n_head, n_head, N)),
-                            // n_past, n_rot, 0),
+                            n_past, n_rot, 0),
                         0, 2, 1, 3);
 
             // K = Kmem.view(n_embd/n_head, n_head, n_past + N).permute(0, 2, 1, 3)
             struct ggml_tensor * K =
                 ggml_permute(ctx0,
-                        // ggml_rope(ctx0,
+                        ggml_gptneox_rope(ctx0,// "change Qcur" in line 2270.)
                             ggml_reshape_3d(ctx0,
                                 ggml_view_1d(ctx0, model.memory_k, (n_past + N)*n_embd, il*n_ctx*ggml_element_size(model.memory_k)*n_embd),
                                 n_embd/n_head, n_head, n_past + N),
-                            // n_past, n_rot, 1),
+                            n_past, n_rot, 1),
                         0, 2, 1, 3);
-            printf("\nK * Q:\n");
+
             // K * Q
             struct ggml_tensor * KQ = ggml_mul_mat(ctx0, K, Q);
 
@@ -2240,7 +2240,7 @@ bool gptneox_eval(
                         KQ,
                         ggml_new_f32(ctx0, 1.0f/sqrt(float(n_embd)/n_head))
                         );
-            printf("\nKQ_masked:\n");
+
             // KQ_masked = mask_past(KQ_scaled)
             struct ggml_tensor * KQ_masked = ggml_diag_mask_inf(ctx0, KQ_scaled, n_past);
 
@@ -2310,7 +2310,7 @@ bool gptneox_eval(
             inpL = ggml_add(ctx0, inpFF, inpL);
 
         } else if (hparams.use_parallel_residual == 1) {
-            printf("use_parallel_residual == 1\n");
+            // printf("use_parallel_residual == 1\n");
             // This is independent of the self-attention result, so it could be done in parallel to the self-attention
 
             // post attention layer norm
@@ -2479,23 +2479,22 @@ int main_gptneox(gpt_params params) {
 
             gpt_vocab::id id = 0;
 
-            // print top 5 logits along with indices
-            if (1) {
-                std::vector<std::pair<float, int>> logits_with_idx;
-                for (int i = 0; i < n_vocab; i++) {
-                    logits_with_idx.push_back(std::make_pair(logits[i], i));
-                }
-                std::sort(logits_with_idx.begin(), logits_with_idx.end(), std::greater<std::pair<float, int>>());
-                printf("top 5 logits:\n");
-                for (int i = 0; i < 5; i++) {
-                    printf("  %6d: %f\n", logits_with_idx[i].second, logits_with_idx[i].first);
-                }
-                // Also print first 5 token logits
-                for (int i = 0; i < 5; i++) {
-                    printf("%d: %f\n", i, logits[i]);
-                }
-            }
-
+            //cprint top 5 logits along with indices
+            // if (1) {
+            //     std::vector<std::pair<float, int>> logits_with_idx;
+            //     for (int i = 0; i < n_vocab; i++) {
+            //         logits_with_idx.push_back(std::make_pair(logits[i], i));
+            //     }
+            //     std::sort(logits_with_idx.begin(), logits_with_idx.end(), std::greater<std::pair<float, int>>());
+            //     printf("top 5 logits:\n");
+            //     for (int i = 0; i < 5; i++) {
+            //         printf("  %6d: %f\n", logits_with_idx[i].second, logits_with_idx[i].first);
+            //     }
+            //     // Also print first 5 token logits
+            //     for (int i = 0; i < 5; i++) {
+            //         printf("%d: %f\n", i, logits[i]);
+            //     }
+            // }
 
             {
                 const int64_t t_start_sample_us = ggml_time_us();
