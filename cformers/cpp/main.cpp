@@ -2198,6 +2198,10 @@ bool gptneox_eval(
             Kcur = ggml_add(ctx0, Kcur, ggml_repeat(ctx0, model.layers[il].c_attn_k_proj_bias, Kcur));
             Vcur = ggml_add(ctx0, Vcur, ggml_repeat(ctx0, model.layers[il].c_attn_v_proj_bias, Vcur));
 
+            // // // // cur = ggml_add(ctx0, cur, Qcur);
+            // // // // cur = ggml_add(ctx0, cur, Kcur);
+            // // // // cur = ggml_add(ctx0, cur, Vcur);
+
             // store key and value to memory
             if (N >= 1) {
                 struct ggml_tensor * k = ggml_view_1d(ctx0, model.memory_k, N*n_embd, (ggml_element_size(model.memory_k)*n_embd)*(il*n_ctx + n_past));
@@ -2226,7 +2230,7 @@ bool gptneox_eval(
                                 n_embd/n_head, n_head, n_past + N),
                             // n_past, n_rot, 1),
                         0, 2, 1, 3);
-
+            printf("\nK * Q:\n");
             // K * Q
             struct ggml_tensor * KQ = ggml_mul_mat(ctx0, K, Q);
 
@@ -2236,7 +2240,7 @@ bool gptneox_eval(
                         KQ,
                         ggml_new_f32(ctx0, 1.0f/sqrt(float(n_embd)/n_head))
                         );
-
+            printf("\nKQ_masked:\n");
             // KQ_masked = mask_past(KQ_scaled)
             struct ggml_tensor * KQ_masked = ggml_diag_mask_inf(ctx0, KQ_scaled, n_past);
 
@@ -2263,14 +2267,10 @@ bool gptneox_eval(
                     ggml_new_tensor_2d(ctx0, GGML_TYPE_F32, n_embd, N));
 
             // projection (first weight)
-            cur = ggml_mul_mat(ctx0,
-                    model.layers[il].c_attn_proj_w,
-                    cur);
+            cur = ggml_mul_mat(ctx0, model.layers[il].c_attn_proj_w, cur);
 
             // projection (then bias)
-            cur = ggml_add(ctx0,
-                    ggml_repeat(ctx0, model.layers[il].c_attn_proj_bias, cur),
-                    cur);
+            cur = ggml_add(ctx0, ggml_repeat(ctx0, model.layers[il].c_attn_proj_bias, cur), cur);
         }
 
         struct ggml_tensor * inpFF;

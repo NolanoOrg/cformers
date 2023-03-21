@@ -197,6 +197,19 @@ bool gptneox_model_quantize(const std::string & fname_inp, const std::string & f
                     for (int i = 0; i < nelements; ++i) {
                         data_f32[i] = ggml_fp16_to_fp32(data_f16[i]);
                     }
+                    // if name is "gpt_neox.layers.0.attention.query.weight", then print first 10 float values.
+                    if (name.find("gpt_neox.layers.0.attention") != std::string::npos) {
+                        // if query.weight or key.weight or value.weight, print first 10 float values.
+                        if (name.find("query.") != std::string::npos ||
+                            name.find("key.") != std::string::npos ||
+                            name.find("value.") != std::string::npos) {
+                            printf("\n\nfirst 10 values: ");
+                            for (int i = 0; i < 10; ++i) {
+                                printf("%f ", data_f32[i]);
+                            }
+                            printf("\n");
+                        }
+                    }
                 } else {
                     data_f32.resize(nelements);
                     finp.read(reinterpret_cast<char *>(data_f32.data()), nelements * sizeof(float));
@@ -208,6 +221,25 @@ bool gptneox_model_quantize(const std::string & fname_inp, const std::string & f
 
                 data_u8.resize(nelements*bpe);
                 finp.read(reinterpret_cast<char *>(data_u8.data()), nelements * bpe);
+            }
+
+            {
+                // if name is "gpt_neox.layers.0.attention.query.weight", then print first 10 float values.
+                if (name.find("gpt_neox.layers.0.attention") != std::string::npos) {
+                    // if query.weight or key.weight or value.weight, print first 10 float values.
+                    if (name.find("query.bias") != std::string::npos ||
+                        name.find("key.bias") != std::string::npos ||
+                        name.find("value.bias") != std::string::npos) {
+                        printf("\n\nfirst 10 values %s: ", name.data());
+                        // combine four consecutive uint8_t to one float
+                        for (int i = 0; i < 10; ++i) {
+                            uint8_t *p = &data_u8[i*4];
+                            float f = *(float *)p;
+                            printf("%f ", f);
+                        }
+                        printf("\n");
+                    }
+                }
             }
 
             fout.write(reinterpret_cast<char *>(&n_dims), sizeof(n_dims));
@@ -240,6 +272,22 @@ bool gptneox_model_quantize(const std::string & fname_inp, const std::string & f
                             return false;
                         }
                 }
+                // // if name is "gpt_neox.layers.0.attention.query.weight", then print first 32 quantized values from work.data()
+                // if (name.find("layers.0.attention.query.weight") != std::string::npos) {
+                //     printf("\n\n\n");
+                //     // first value is a fp32 scale followed by 32 "int4" values.
+                //     printf("scale = %f\n", work[0]);
+                //     void *p = &work[1];
+                //     // Since int4_t is not defined, we use int8_t to print the values two at a time, offset by 4 bits.
+                //     int8_t *p8 = (int8_t *)p;
+                //     for (int i = 0; i < 16; i++) {
+                //         // print first 4 bits
+                //         printf("%d ", (p8[i] >> 4) & 0xf);
+                //         // print last 4 bits
+                //         printf("%d ", p8[i] & 0xf);
+                //     }
+                //     printf("\n\n\n");
+                // }
 
                 fout.write(reinterpret_cast<char *>(work.data()), cur_size);
                 total_size_new += cur_size;
