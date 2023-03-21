@@ -1,6 +1,6 @@
 # Cformers
 
-Fast inference of SoTA AI Models on your CPU.
+SoTA Transformers with C-backend for fast inference on your CPU.
 
 ## Introduction
 
@@ -124,4 +124,4 @@ MIT License
 
 ## Communication and Support
 
-Discord: https://discord.gg/peBU7yWa
+Discord: https://discord.gg/HGujTPQtR6
