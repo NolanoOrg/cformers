@@ -196,7 +196,7 @@ clean:
 	rm -f *.o main quantizeBloom quantizeGPTJ quantizeGPT2
 
 main: main.cpp ggml.o utils.o
-	$(CXX) $(CXXFLAGS) main.cpp ggml.o utils.o -o main $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) main.cpp -g ggml.o utils.o -o main $(LDFLAGS)
 	./main -h
 
 quantizeBloom: quantize_bloom.cpp ggml.o utils.o

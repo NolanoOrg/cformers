@@ -1543,7 +1543,7 @@ int main_gptj(gpt_params params) {
     const int64_t t_main_start_us = ggml_time_us();
     int64_t t_load_us = 0;
 
-    std::mt19937 rng(params.seed);
+    std::mt19937 rng(params.seed); //TODO: understand this
 
     gpt_vocab vocab;
     gptj_model model;
@@ -1685,6 +1685,92 @@ int main_gptj(gpt_params params) {
     ggml_free(model.ctx);
 
     return 0;
+}
+
+////////////////////////////////////////////////////////
+//////////////////////   GPT2    //////////////////////
+////////////////////////////////////////////////////////
+
+struct gpt2_hparams {
+    int32_t n_vocab = 50257;
+    int32_t n_ctx   = 1024;
+    int32_t n_embd  = 768;
+    int32_t n_head  = 12;
+    int32_t n_layer = 12;
+    int32_t n_rot   = 0;
+    int32_t f16     = 1;
+};
+
+struct gpt2_layer {
+    // normalization
+    struct ggml_tensor * ln_1_g;
+    struct ggml_tensor * ln_1_b;
+
+    // attention
+    struct ggml_tensor * attn_c_attn_w;
+    struct ggml_tensor * attn_c_attn_b;
+    struct ggml_tensor * attn_c_proj_w;
+    struct ggml_tensor * attn_c_proj_b;
+
+    // normalization
+    struct ggml_tensor * ln_2_g;
+    struct ggml_tensor * ln_2_b;
+
+    // mlp
+    struct ggml_tensor * mlp_c_fc_w;
+    struct ggml_tensor * mlp_c_fc_b;
+    struct ggml_tensor * mlp_c_proj_w;
+    struct ggml_tensor * mlp_c_proj_b;
+
+};
+
+struct gpt2_model {
+    struct gpt2_hparams hparams;
+    struct ggml_context * ctx;
+
+    std::map<std::string, struct ggml_tensor *>tensors;
+
+    std::vector<struct gpt2_layer> layers;
+
+    struct ggml_tensor * wpe;
+    struct ggml_tensor * wte;
+
+    struct ggml_tensor * ln_f_g;
+    struct ggml_tensor * ln_f_b;
+
+    struct ggml_tensor * lmh_g;
+    struct ggml_tensor * lmh_b;
+
+    struct ggml_tensor * memory_k;
+    struct ggml_tensor * memory_v;
+
+};
+
+bool gpt2_load_model(const std::string & model_path, gpt2_model & model) {
+    return false;
+}
+
+int main_gpt2(gpt_params params){
+    ggml_time_init();
+    const int64_t t_main_start_us = ggml_time_us();
+    int64_t t_load_us = 0;
+
+    std::mt19937 rng(params.seed);
+
+    gpt_vocab vocab;
+    gpt2_model model;
+
+    // load model
+    {
+        const int64_t t_main_start_us = ggml_time_us();
+        const int n_ctx = 512;
+
+        if (!gpt2_load_model(params.model, model)) {
+            return 1;
+        }
+
+        t_load_us = ggml_time_us() - t_main_start_us;
+    }
 }
 
 ////////////////////////////////////////////////////////
