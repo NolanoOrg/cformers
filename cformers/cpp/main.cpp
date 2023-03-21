@@ -1746,7 +1746,7 @@ struct gpt2_model {
 
 };
 
-bool gpt2_load_model(const std::string & model_path, gpt2_model & model) {
+bool gpt2_model_load(const std::string & model_path, gpt2_model & model) {
     return false;
 }
 
@@ -1765,7 +1765,7 @@ int main_gpt2(gpt_params params){
         const int64_t t_main_start_us = ggml_time_us();
         const int n_ctx = 512;
 
-        if (!gpt2_load_model(params.model, model)) {
+        if (!gpt2_model_load(params.model, model)) {
             return 1;
         }
 
@@ -1813,9 +1813,10 @@ int main(int argc, char ** argv) {
         return main_bloom(params);
     } else if (model_type == "gptj") {
         return main_gptj(params);
+    } else if {
+        return main_gpt2(params);
     } else {
         printf("Unknown model type: %s\n", model_type.c_str());
         return 1;
     }
-
 }
