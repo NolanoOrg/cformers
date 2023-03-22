@@ -19,6 +19,7 @@ models/*
 cformers/cpp/main
 cformers/cpp/quantize_bloom
 cformers/cpp/quantize_gptj
+cformers/cpp/quantize_gptneox
 
 arm_neon.h
 compile_commands.json

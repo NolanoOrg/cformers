@@ -24,22 +24,44 @@ And most importantly:
 
 ## Usage
 
+Setup
 ```bash
 pip install transformers wget
 git clone https://github.com/nolanoOrg/cformers.git
 cd cformers/cformers/cpp && make && cd ..
-python
-    >>> from interface import AutoInference as AI
-    >>> ai = AI('EleutherAI/gpt-j-6B')
-    >>> x = ai.generate('def parse_html(html_doc):', num_tokens_to_generate=500)
-    >>> print(x['token_str'])
 ```
 
+Usage:
+```python
+from interface import AutoInference as AI
+ai = AI('EleutherAI/gpt-j-6B')
+x = ai.generate('def parse_html(html_doc):', num_tokens_to_generate=500)
+print(x['token_str'])
+```
+
+OR
+
+```python
+from interface import AutoInference as AI
+ai = AI('OpenAssistant/oasst-sft-1-pythia-12b')
+x = ai.generate("<|prompter|>What's the Earth total population<|endoftext|><|assistant|>", num_tokens_to_generate=100)
+print(x['token_str'])
+```
+
+
 We are working on adding support for `pip install cformers.`
+
+Following Architectures are supported:
+- GPT-J
+- BLOOM
+- GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit
 
 Currently following huggingface models are supported:
 - EleutherAI/gpt-j-6B
 - BigScience/bloom-7b1
+- OpenAssistant/oasst-sft-1-pythia-12b
+
+We need to quantize and upload remaining models based on the supported architectures on huggingface. We would appreciate your help in this regard.
 
 ## Coming Soon:
 
@@ -50,9 +72,8 @@ Features:
 
 Code-base restructuring:
 - [ ] Switch to Pybind11 rather than Subprocess - expected speedup: 3-4x
-- [ ] Structure the codebase to reuse, wherever possible.
-- [ ] Figure out a way to create llama.cpp as a git-submodule/dependency.
-
+- [ ] Restructure the codebase to reuse.
+- [ ] Somehow create llama.cpp as a git-submodule/dependency.
 
 ## Models
 
@@ -60,7 +81,7 @@ For now, we are focussing on AutoRegressive-style generative models.
 
 - [x] GPT-J
 - [x] BLOOM
-- [ ] GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit
+- [x] GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit (Architecture supported, need to quantize and upload models.)
 - [ ] CodeGen
 - [ ] LLaMa & Alpaca
 - [ ] OPT & Galactica

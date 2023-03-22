@@ -15,20 +15,20 @@
 // TODO: move somewhere else
 #define QK 32
 
-// default hparams (Bloom76B)
-struct bloom_hparams {
-    int32_t n_vocab = 32000;
-    int32_t n_ctx   = 512;   // this is provided as user input?
+// default hparams (GPT-NeoX 6B)
+struct gptneox_hparams {
+    int32_t n_vocab = 50400;
+    int32_t n_ctx   = 2048;
     int32_t n_embd  = 4096;
-    int32_t n_mult  = 256;
-    int32_t n_head  = 32;
-    int32_t n_layer = 32;
+    int32_t n_head  = 16;
+    int32_t n_layer = 28;
+    int32_t n_rot   = 32;
+    int32_t use_parallel_residual = 1;
     int32_t f16     = 1;
 };
 
-
 // quantize a model
-bool bloom_model_quantize(const std::string & fname_inp, const std::string & fname_out, int itype) {
+bool gptneox_model_quantize(const std::string & fname_inp, const std::string & fname_out, int itype) {
     ggml_type type = GGML_TYPE_Q4_1;
 
     switch (itype) {
@@ -70,32 +70,35 @@ bool bloom_model_quantize(const std::string & fname_inp, const std::string & fna
         fout.write((char *) &magic, sizeof(magic));
     }
 
-    bloom_hparams hparams;
+    gptneox_hparams hparams;
 
     // load hparams
     {
         finp.read((char *) &hparams.n_vocab, sizeof(hparams.n_vocab));
         //finp.read((char *) &hparams.n_ctx,   sizeof(hparams.n_ctx));
         finp.read((char *) &hparams.n_embd,  sizeof(hparams.n_embd));
-        finp.read((char *) &hparams.n_mult,  sizeof(hparams.n_mult));
         finp.read((char *) &hparams.n_head,  sizeof(hparams.n_head));
         finp.read((char *) &hparams.n_layer, sizeof(hparams.n_layer));
+        finp.read((char *) &hparams.n_rot,  sizeof(hparams.n_rot));
+        finp.read((char *) &hparams.use_parallel_residual, sizeof(hparams.use_parallel_residual));
         finp.read((char *) &hparams.f16,     sizeof(hparams.f16));
 
         printf("%s: n_vocab = %d\n", __func__, hparams.n_vocab);
-        printf("%s: n_ctx   = %d\n", __func__, hparams.n_ctx);
+        // printf("%s: n_ctx   = %d\n", __func__, hparams.n_ctx);
         printf("%s: n_embd  = %d\n", __func__, hparams.n_embd);
-        printf("%s: n_mult  = %d\n", __func__, hparams.n_mult);
         printf("%s: n_head  = %d\n", __func__, hparams.n_head);
         printf("%s: n_layer = %d\n", __func__, hparams.n_layer);
+        printf("%s: n_rot   = %d\n", __func__, hparams.n_rot);
+        printf("%s: use_parallel_residual = %d\n", __func__, hparams.use_parallel_residual);
         printf("%s: f16     = %d\n", __func__, hparams.f16);
 
         fout.write((char *) &hparams.n_vocab, sizeof(hparams.n_vocab));
         //fout.write((char *) &hparams.n_ctx,   sizeof(hparams.n_ctx));
         fout.write((char *) &hparams.n_embd,  sizeof(hparams.n_embd));
-        fout.write((char *) &hparams.n_mult,  sizeof(hparams.n_mult));
         fout.write((char *) &hparams.n_head,  sizeof(hparams.n_head));
         fout.write((char *) &hparams.n_layer, sizeof(hparams.n_layer));
+        fout.write((char *) &hparams.n_rot,  sizeof(hparams.n_rot));
+        fout.write((char *) &hparams.use_parallel_residual, sizeof(hparams.use_parallel_residual));
         fout.write((char *) &itype,           sizeof(hparams.f16));
     }
 
@@ -194,6 +197,19 @@ bool bloom_model_quantize(const std::string & fname_inp, const std::string & fna
                     for (int i = 0; i < nelements; ++i) {
                         data_f32[i] = ggml_fp16_to_fp32(data_f16[i]);
                     }
+                    // if name is "gpt_neox.layers.0.attention.query.weight", then print first 10 float values.
+                    if (name.find("gpt_neox.layers.0.attention") != std::string::npos) {
+                        // if query.weight or key.weight or value.weight, print first 10 float values.
+                        if (name.find("query.") != std::string::npos ||
+                            name.find("key.") != std::string::npos ||
+                            name.find("value.") != std::string::npos) {
+                            printf("\n\nfirst 10 values: ");
+                            for (int i = 0; i < 10; ++i) {
+                                printf("%f ", data_f32[i]);
+                            }
+                            printf("\n");
+                        }
+                    }
                 } else {
                     data_f32.resize(nelements);
                     finp.read(reinterpret_cast<char *>(data_f32.data()), nelements * sizeof(float));
@@ -205,6 +221,25 @@ bool bloom_model_quantize(const std::string & fname_inp, const std::string & fna
 
                 data_u8.resize(nelements*bpe);
                 finp.read(reinterpret_cast<char *>(data_u8.data()), nelements * bpe);
+            }
+
+            {
+                // if name is "gpt_neox.layers.0.attention.query.weight", then print first 10 float values.
+                if (name.find("gpt_neox.layers.0.attention") != std::string::npos) {
+                    // if query.weight or key.weight or value.weight, print first 10 float values.
+                    if (name.find("query.bias") != std::string::npos ||
+                        name.find("key.bias") != std::string::npos ||
+                        name.find("value.bias") != std::string::npos) {
+                        printf("\n\nfirst 10 values %s: ", name.data());
+                        // combine four consecutive uint8_t to one float
+                        for (int i = 0; i < 10; ++i) {
+                            uint8_t *p = &data_u8[i*4];
+                            float f = *(float *)p;
+                            printf("%f ", f);
+                        }
+                        printf("\n");
+                    }
+                }
             }
 
             fout.write(reinterpret_cast<char *>(&n_dims), sizeof(n_dims));
@@ -237,6 +272,22 @@ bool bloom_model_quantize(const std::string & fname_inp, const std::string & fna
                             return false;
                         }
                 }
+                // // if name is "gpt_neox.layers.0.attention.query.weight", then print first 32 quantized values from work.data()
+                // if (name.find("layers.0.attention.query.weight") != std::string::npos) {
+                //     printf("\n\n\n");
+                //     // first value is a fp32 scale followed by 32 "int4" values.
+                //     printf("scale = %f\n", work[0]);
+                //     void *p = &work[1];
+                //     // Since int4_t is not defined, we use int8_t to print the values two at a time, offset by 4 bits.
+                //     int8_t *p8 = (int8_t *)p;
+                //     for (int i = 0; i < 16; i++) {
+                //         // print first 4 bits
+                //         printf("%d ", (p8[i] >> 4) & 0xf);
+                //         // print last 4 bits
+                //         printf("%d ", p8[i] & 0xf);
+                //     }
+                //     printf("\n\n\n");
+                // }
 
                 fout.write(reinterpret_cast<char *>(work.data()), cur_size);
                 total_size_new += cur_size;
@@ -314,7 +365,7 @@ int main(int argc, char ** argv) {
     {
         const int64_t t_start_us = ggml_time_us();
 
-        if (!bloom_model_quantize(fname_inp, fname_out, itype)) {
+        if (!gptneox_model_quantize(fname_inp, fname_out, itype)) {
             fprintf(stderr, "%s: failed to quantize model from '%s'\n", __func__, fname_inp.c_str());
             return 1;
         }
