@@ -24,27 +24,28 @@ And most importantly:
 
 ## Usage
 
+Setup
 ```bash
 pip install transformers wget
 git clone https://github.com/nolanoOrg/cformers.git
 cd cformers/cformers/cpp && make && cd ..
-python
-    >>> from interface import AutoInference as AI
-    >>> ai = AI('EleutherAI/gpt-j-6B')
-    >>> x = ai.generate('def parse_html(html_doc):', num_tokens_to_generate=500)
-    >>> print(x['token_str'])
 ```
+
+Usage:
+```python
+from interface import AutoInference as AI
+ai = AI('EleutherAI/gpt-j-6B')
+x = ai.generate('def parse_html(html_doc):', num_tokens_to_generate=500)
+print(x['token_str'])
+```
+
 OR
 
-```bash
-pip install transformers wget
-git clone https://github.com/nolanoOrg/cformers.git
-cd cformers/cformers/cpp && make && cd ..
-python
-    >>> from interface import AutoInference as AI
-    >>> ai = AI('OpenAssistant/oasst-sft-1-pythia-12b')
-    >>> x = ai.generate("<|prompter|>What's the Earth total population<|endoftext|><|assistant|>", num_tokens_to_generate=100)
-    >>> print(x['token_str'])
+```python
+from interface import AutoInference as AI
+ai = AI('OpenAssistant/oasst-sft-1-pythia-12b')
+x = ai.generate("<|prompter|>What's the Earth total population<|endoftext|><|assistant|>", num_tokens_to_generate=100)
+print(x['token_str'])
 ```
 
 

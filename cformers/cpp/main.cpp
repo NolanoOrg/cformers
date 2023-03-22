@@ -903,10 +903,10 @@ int main_bloom(gpt_params params) {
 
         // end of text token
         if (embd.back() == 2) {
-            printf(" <END|>\n");
             break;
         }
     }
+    printf(" <END|>\n");
 
     // report timing
     {
