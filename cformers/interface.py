@@ -155,8 +155,8 @@ class AutoInference:
                     token_id_buffer = ""
                     tokens_ids_so_far.append(token_id)
                     # Call the streaming output hooks
-                    streaming_output_hook_str(token_str)
-                    streaming_output_hook_ids(token_id)
+                    streaming_token_str_hook(token_str)
+                    streaming_token_ids_hook(token_id)
                     to_print = token_str
                 else:
                     token_id_buffer += c.decode('utf-8')
