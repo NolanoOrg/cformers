@@ -337,6 +337,7 @@ bool gptneox_model_quantize(const std::string & fname_inp, const std::string & f
 // ./quantize models/ggml-model-bloomz-7b1-f16.bin models/ggml-model-bloomz-7b1-f16-quant.bin 2
 //
 int main(int argc, char ** argv) {
+    ggml_time_init();
     if (argc != 4) {
         fprintf(stderr, "usage: %s model-f32.bin model-quant.bin type\n", argv[0]);
         fprintf(stderr, "  type = 2 - q4_0\n");
