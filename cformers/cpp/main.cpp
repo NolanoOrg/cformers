@@ -2514,11 +2514,13 @@ int main_gpt2(gpt_params params){
         fflush(stdout);
 
         // end of text token
-        if (embd.back() == 2) {
+        if (embd.back() == 50256) {
             printf(" <END|>\n");
             break;
         }
     }
+
+    printf(" <END|>\n");
 
     // report timing
     {
