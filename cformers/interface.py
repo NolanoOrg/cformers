@@ -59,12 +59,26 @@ class ModelUrlMap:
             if mode_str != ""]
 
 MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
+    # GPT-J
     'EleutherAI/gpt-j-6B': ModelUrlMap(
         cpp_model_name="gptj",
         int4_fixed_zero="https://huggingface.co/ayushk4/EleutherAI-.-gpt-j-6B/resolve/main/int4_fixed_zero.bin"),
+    'Salesforce/codegen-2B-mono': ModelUrlMap(
+        cpp_model_name="gptj",
+        int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-2B-mono/resolve/main/int4-fixed-zero.bin"),
+    'Salesforce/codegen-6B-mono': ModelUrlMap(
+        cpp_model_name="gptj",
+        int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-6B-mono/resolve/main/int4-fixed-zero.bin"),
+    'Salesforce/codegen-16B-mono': ModelUrlMap(
+        cpp_model_name="gptj",
+        int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-16B-mono/resolve/main/int4-fixed-zero.bin"),
+
+    # Bloom
     'bigscience/bloom-7b1': ModelUrlMap(
         cpp_model_name="bloom",
         int4_fixed_zero="https://huggingface.co/ayushk4/bigscience-.-bloom-7b1/resolve/main/int4_fixed_zero.bin"),
+
+    # GPT-NeoX based
     'OpenAssistant/oasst-sft-1-pythia-12b': ModelUrlMap(
         cpp_model_name="gptneox",
         int4_fixed_zero="https://huggingface.co/ayushk4/OpenAssistant-.-oasst-sft-1-pythia-12b/resolve/main/int4_fixed_zero.bin"),

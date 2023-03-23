@@ -421,7 +421,7 @@ gpt_vocab::id sample_top_p_top_k_repeat_penalty(
     return logits_id[idx].second;
 }
 
-
+int do_print = 1;
 size_t ggml_quantize_q4_0(float * src, void * dst, int n, int k, int qk, int64_t * hist) {
     const int nb = k / qk;
     const size_t bs = (sizeof(float) + sizeof(uint8_t)*qk/2);
@@ -467,8 +467,11 @@ size_t ggml_quantize_q4_0(float * src, void * dst, int n, int k, int qk, int64_t
                     hist[vi1]++;
 
                     pp[l/2] = vi0 | (vi1 << 4);
+                    if (do_print > 0) {
+                        printf("\n%d %d %f %f", vi0, vi1, v0, v1);
+                    }
                 }
-
+                do_print--;
                 memcpy(pb, pp, pp_size);
                 pb += bs;
             }
