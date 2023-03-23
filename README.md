@@ -64,11 +64,15 @@ Following Architectures are supported:
 - GPT-J
 - BLOOM
 - GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit
+- CodeGen
 
 Currently following huggingface models are supported:
 - EleutherAI/gpt-j-6B
 - BigScience/bloom-7b1
 - OpenAssistant/oasst-sft-1-pythia-12b
+- Salesforce/codegen-2B-mono
+- Salesforce/codegen-6B-mono
+- Salesforce/codegen-16B-mono
 
 We need to quantize and upload remaining models based on the supported architectures on huggingface. We would appreciate your help in this regard.
 
@@ -91,7 +95,7 @@ For now, we are focussing on AutoRegressive-style generative models.
 - [x] GPT-J
 - [x] BLOOM
 - [x] GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit (Architecture supported, need to quantize and upload models.)
-- [ ] CodeGen
+- [X] CodeGen
 - [ ] LLaMa & Alpaca
 - [ ] OPT & Galactica
 - [ ] T5

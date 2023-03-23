@@ -1,3 +1,4 @@
+cformers/cpp/converters/*.json
 *.o
 *.a
 .cache/
