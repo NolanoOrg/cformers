@@ -47,7 +47,16 @@ ai = AI('OpenAssistant/oasst-sft-1-pythia-12b')
 x = ai.generate("<|prompter|>What's the Earth total population<|endoftext|><|assistant|>", num_tokens_to_generate=100)
 print(x['token_str'])
 ```
+OR
 
+```bash
+python chat.py
+```
+chat.py accepts the following parameteres:
+
+- ``` -t 100 ``` Number of tokens to generate 
+- ```-p Tell me a joke``` for a single prompt interaction
+- ```-m pythia``` to load one of the available (bloom, pythia or gptj )
 
 We are working on adding support for `pip install cformers.`
 
