@@ -9,7 +9,7 @@ parser.add_argument("-m", "--model", help="Specify a Model", choices=model_map.k
 args = parser.parse_args()
 
 def generate(prompt,arg=args):
-    print('Model is '+arg.model);
+    print('Model is '+arg.model)
     if arg.model == 'pythia':
         x = ai.generate("<|prompter|>"+prompt+"<|endoftext|><|assistant|>", num_tokens_to_generate=arg.tokens)
     elif arg.model == 'bloom':
