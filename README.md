@@ -47,7 +47,16 @@ ai = AI('OpenAssistant/oasst-sft-1-pythia-12b')
 x = ai.generate("<|prompter|>What's the Earth total population<|endoftext|><|assistant|>", num_tokens_to_generate=100)
 print(x['token_str'])
 ```
+OR
 
+```bash
+python chat.py
+```
+chat.py accepts the following parameteres:
+
+- ``` -t 100 ``` Number of tokens to generate 
+- ```-p Tell me a joke``` for a single prompt interaction
+- ```-m pythia``` to load one of the available (bloom, pythia or gptj )
 
 We are working on adding support for `pip install cformers.`
 
@@ -55,11 +64,15 @@ Following Architectures are supported:
 - GPT-J
 - BLOOM
 - GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit
+- CodeGen
 
 Currently following huggingface models are supported:
 - EleutherAI/gpt-j-6B
 - BigScience/bloom-7b1
 - OpenAssistant/oasst-sft-1-pythia-12b
+- Salesforce/codegen-2B-mono
+- Salesforce/codegen-6B-mono
+- Salesforce/codegen-16B-mono
 
 We need to quantize and upload remaining models based on the supported architectures on huggingface. We would appreciate your help in this regard.
 
@@ -82,7 +95,7 @@ For now, we are focussing on AutoRegressive-style generative models.
 - [x] GPT-J
 - [x] BLOOM
 - [x] GPT-NeoX/Pythia/Open-Assistant/Open-Chat-Kit (Architecture supported, need to quantize and upload models.)
-- [ ] CodeGen
+- [X] CodeGen
 - [ ] LLaMa & Alpaca
 - [ ] OPT & Galactica
 - [ ] T5

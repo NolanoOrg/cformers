@@ -148,6 +148,7 @@ for name in list_vars.keys():
     fout.write(str)
 
     # data
+    print(data.shape, data.dtype, data.nbytes, data[:2, :2] if n_dims > 1 else data[:2])
     data.tofile(fout)
 
 fout.close()

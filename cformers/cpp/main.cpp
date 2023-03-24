@@ -1578,9 +1578,9 @@ int main_gptj(gpt_params params) {
     printf("\n");
     printf("%s: prompt: '%s'\n", __func__, params.prompt.c_str());
     printf("%s: number of tokens in prompt = %zu\n", __func__, embd_inp.size());
-    for (int i = 0; i < (int) embd_inp.size(); i++) {
-        printf("%6d -> '%s'\n", embd_inp[i], vocab.id_to_token.at(embd_inp[i]).c_str());
-    }
+    // for (int i = 0; i < (int) embd_inp.size(); i++) {
+    //     printf("%6d -> '%s'\n", embd_inp[i], vocab.id_to_token.at(embd_inp[i]).c_str());
+    // }
     printf("\n");
     printf("sampling parameters: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n", params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     printf("\n\n");
@@ -2438,9 +2438,9 @@ int main_gptneox(gpt_params params) {
     printf("\n");
     printf("%s: prompt: '%s'\n", __func__, params.prompt.c_str());
     printf("%s: number of tokens in prompt = %zu\n", __func__, embd_inp.size());
-    for (int i = 0; i < (int) embd_inp.size(); i++) {
-        printf("%6d -> '%s'\n", embd_inp[i], vocab.id_to_token.at(embd_inp[i]).c_str());
-    }
+    // for (int i = 0; i < (int) embd_inp.size(); i++) {
+    //     printf("%6d -> '%s'\n", embd_inp[i], vocab.id_to_token.at(embd_inp[i]).c_str());
+    // }
     printf("\n");
     printf("sampling parameters: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n", params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     printf("\n\n");
