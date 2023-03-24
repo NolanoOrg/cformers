@@ -180,7 +180,7 @@ $(info I CC:       $(CCV))
 $(info I CXX:      $(CXXV))
 $(info )
 
-default: main quantizeBloom quantizeGPTJ quantizeGPTNeoX
+default: main quantizeBloom quantizeGPTJ quantizeGPT2 quantizeGPTNeoX
 
 #
 # Build library
@@ -192,11 +192,12 @@ ggml.o: ggml.c ggml.h
 utils.o: utils.cpp utils.h
 	$(CXX) $(CXXFLAGS) -c utils.cpp -o utils.o
 
-clean:
-	rm -f *.o main quantizeBloom quantizeGPTJ quantizeGPTNeoX
+
+	rm -f *.o main quantizeBloom quantizeGPTJ quantizeGPT2 quantizeGPTNeoX
+
 
 main: main.cpp ggml.o utils.o
-	$(CXX) $(CXXFLAGS) main.cpp ggml.o utils.o -o main $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) main.cpp -g ggml.o utils.o -o main $(LDFLAGS)
 	./main -h
 
 quantizeBloom: quantize_bloom.cpp ggml.o utils.o
@@ -205,8 +206,12 @@ quantizeBloom: quantize_bloom.cpp ggml.o utils.o
 quantizeGPTJ: quantize_gptj.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) quantize_gptj.cpp ggml.o utils.o -o quantize_gptj $(LDFLAGS)
 
+quantizeGPT2: quantize_gpt2.cpp ggml.o utils.o
+	$(CXX) $(CXXFLAGS) quantize_gpt2.cpp ggml.o utils.o -o quantize_gpt2 $(LDFLAGS)
+
 quantizeGPTNeoX: quantize_gptneox.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) quantize_gptneox.cpp ggml.o utils.o -o quantize_gptneox $(LDFLAGS)
+
 #
 # Tests
 #

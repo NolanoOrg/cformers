@@ -100,7 +100,7 @@ For now, we are focussing on AutoRegressive-style generative models.
 - [ ] OPT & Galactica
 - [ ] T5
 - [ ] RWKV
-- [ ] GPT-2
+- [x] GPT-2
 - And more (including multimodal)...
 
 ## Quantization types:
