@@ -7317,9 +7317,6 @@ static void ggml_compute_forward_gptneox_rope_f32(
     const int nb2 = src0->nb[2]; // This is the number of bytes per sequence (seq_len * nb1)
     const int nb3 = src0->nb[3]; // This is the number of bytes per batch (batch_size * nb2)
 
-    // printf("ne0: %d, ne1: %d, ne2: %d, ne3: %d\n", ne0, ne1, ne2, ne3);
-    // printf("nb0: %d, nb1: %d, nb2: %d, nb3: %d\n", nb0, nb1, nb2, nb3);
-    // printf("n_past = %d, n_dims = %d, mode = %d\n", n_past, n_dims, mode);
 
     assert(nb0 == sizeof(float));
 
@@ -7328,6 +7325,9 @@ static void ggml_compute_forward_gptneox_rope_f32(
         for (int i2 = (mode == 0 ? 0 : n_past); i2 < ne2; i2++) {
             const int p = (mode == 0 ? n_past + i2 : i2);
             for (int i1 = 0; i1 < ne1; i1++) {
+                // assert n_dims is even
+                assert(n_dims % 2 == 0);
+
                 // For the first half of the dimensions of src0.
                 for (int i0 = 0; i0 < n_dims / 2; i0++) {
                     const double theta = pow(10000.0, 2 * ((double)-i0) / n_dims);
@@ -7335,31 +7335,25 @@ static void ggml_compute_forward_gptneox_rope_f32(
                     const double cos_theta = cos(p*theta);
                     const double sin_theta = sin(p*theta);
 
-                    const float * const src0_data1 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
-                    const float * const src0_data2 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + (i0 + n_dims / 2) * nb0);
+                    const float * const src0_data = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
                           float * dst_data         = (float *) ((char *) dst->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
 
-                    double x1 = src0_data1[0];
-                    double x2 = src0_data2[0];
+                    double x1 = src0_data[0];
+                    double x2 = src0_data[n_dims/2];
 
-                    dst_data[0] = (float) (cos_theta * x1 - sin_theta * x2);
+                    double result1 = (cos_theta * x1 - sin_theta * x2);
+                    double result2 = (cos_theta * x2 + sin_theta * x1);
+                    // After spending 4 hours, I figured out that src0_data1 and dst_data are the same pointer.
+                    dst_data[0] = result1;
+                    dst_data[n_dims/2] = result2;
+                    // if (dddebug) {
+                    //     printf("x1: %.6f, x2: %.6f, dst[0]: %.6f, dst[%d]: %.6f\n", x1, x2, dst_data[0], n_dims/2, dst_data[n_dims/2]);
+                    // }
                 }
-                // For the second half of the dimensions of src0.
-                for (int i0 = n_dims / 2; i0 < n_dims; i0++) {
-                    const double theta = pow(10000.0, 2 * ((double)-i0) / n_dims);
-
-                    const double cos_theta = cos(p*theta);
-                    const double sin_theta = sin(p*theta);
-
-                    const float * const src0_data1 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
-                    const float * const src0_data2 = (float *) ((char *) src0->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + (i0 - n_dims / 2) * nb0);
-                          float * dst_data         = (float *) ((char *) dst->data + i3 * nb3 + i2 * nb2 + i1 * nb1 + i0 * nb0);
-
-                    double x1 = src0_data1[0];
-                    double x2 = src0_data2[0];
-
-                    dst_data[0] = (float) (cos_theta * x1 + sin_theta * x2);
-                }
+                // if (dddebug) {
+                //     printf("\n");
+                //     dddebug = false;
+                // }
             }
         }
     }

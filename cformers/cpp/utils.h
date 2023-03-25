@@ -28,6 +28,9 @@ struct gpt_params {
 
     std::string model = "models/lamma-7B/ggml-model.bin"; // model path
     std::string prompt;
+
+    // return_logits mode
+    bool return_logits = false;
 };
 
 bool gpt_params_parse(int argc, char ** argv, gpt_params & params);

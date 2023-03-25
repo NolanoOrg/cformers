@@ -209,7 +209,8 @@ for name in list_vars.keys():
         data = data.astype(np.float16)
         ftype_cur = 1
     else:
-        print("  Converting to float32", data.shape, data[:3].tolist())
+        print("  Converting to float32", data.shape,
+              data[:3, :3].tolist() if n_dims > 1 else data[:3].tolist())
         data = data.astype(np.float32)
 
     # header

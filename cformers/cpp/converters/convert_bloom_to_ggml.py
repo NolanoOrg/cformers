@@ -104,7 +104,7 @@ for i in range(hparams["vocab_size"]):
     text = tokenizer.decode([i]).encode('utf-8')
     fout.write(struct.pack("i", len(text)))
     fout.write(text)
-    
+
 list_vars = model.state_dict()
 for name in list_vars.keys():
     src = name
