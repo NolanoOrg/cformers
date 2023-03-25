@@ -74,6 +74,7 @@ Currently following huggingface models are supported:
 - bigscience/bloom-3b
 - BigScience/bloom-7b1
 - OpenAssistant/oasst-sft-1-pythia-12b
+- togethercomputer/GPT-NeoXT-Chat-Base-20B
 - Salesforce/codegen-2B-mono
 - Salesforce/codegen-6B-mono
 - Salesforce/codegen-16B-mono

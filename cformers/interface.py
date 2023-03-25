@@ -95,6 +95,10 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
         cpp_model_name="gpt2",
         int4_fixed_zero="https://huggingface.co/kamalojasv/gpt2/resolve/main/int4_fixed_zero"),
 
+    # togethercomputer/OpenChatKit
+    'togethercomputer/GPT-NeoXT-Chat-Base-20B': ModelUrlMap(
+        cpp_model_name="gptneox",
+        int4_fixed_zero="https://huggingface.co/Black-Engineer/OpenChatKit_q4/resolve/main/int4_fixed_zero"),
 
     # GPT-NeoX based
     'OpenAssistant/oasst-sft-1-pythia-12b': ModelUrlMap(
