@@ -145,13 +145,17 @@ You can also contribute to LLaMa.cpp and we will port those niceties here.
 - Add Int3 and Int2 quantization support to GGML/LLaMa.cpp
 - Add fast Ampere-sparse quantized matrix multiplication functions in GGML/LLaMa.cpp
 
-## Known Limitations (We are fixing this ASAP.)
+## Misc. Notes
 
-Current implementation is about 2 times slower than the [both](https://github.com/NolanoOrg/llama-int4-quant) the [existing](https://github.com/ggerganov/llama.cpp) C++ implementations of LLaMa because of the way we are calling the C++ kernels from Python.
+Our interface is still limited to generation. We are working to support other features:
 
-We are creating pybindings over the C++ kernels and calling them from Python to speed this up and provide a better interface over the C++ kernels.
+- [ ] Allow stopping-generation midway
+- [ ] Anti-prompt for conversation models
+- [ ] Returning embeddings and/or logits.
+- [ ] [Dev] Switch to pybindings over the C++ kernels and calling them from Python.
+- [ ] [Dev] Re-use the code in main.cpp
 
-We would love to hear from you various ways in which we can speed this up or improve the interface to make this more usable.
+We would love to hear from you various ways in which we can speed up and improve the interface.
 
 ## License
 MIT License
