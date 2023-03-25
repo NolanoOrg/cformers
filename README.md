@@ -68,6 +68,10 @@ Following Architectures are supported:
 
 Currently following huggingface models are supported:
 - EleutherAI/gpt-j-6B
+- bigscience/bloom-560m
+- bigscience/bloom-1b1
+- bigscience/bloom-1b7
+- bigscience/bloom-3b
 - BigScience/bloom-7b1
 - OpenAssistant/oasst-sft-1-pythia-12b
 - Salesforce/codegen-2B-mono

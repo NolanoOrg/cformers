@@ -74,10 +74,22 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
         int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-16B-mono/resolve/main/int4-fixed-zero.bin"),
 
     # Bloom
+    'bigscience/bloom-560m': ModelUrlMap(
+        cpp_model_name="bloom",
+        int4_fixed_zero="https://huggingface.co/tejasvaidhya/bloom-560m-4bit-quant.bin/resolve/main/int4_fixed_zero.bin"),
+    'bigscience/bloom-1b1': ModelUrlMap(
+        cpp_model_name="bloom",
+        int4_fixed_zero="https://huggingface.co/tejasvaidhya/bloom-1b1-4bit-quant.bin/resolve/main/int4_fixed_zero.bin"),
+    'bigscience/bloom-1b7': ModelUrlMap(
+        cpp_model_name="bloom",
+        int4_fixed_zero="https://huggingface.co/tejasvaidhya/bloom-1b7-4bit-quant.bin/resolve/main/int4_fixed_zero.bin"),
+    'bigscience/bloom-3b': ModelUrlMap(
+        cpp_model_name="bloom",
+        int4_fixed_zero="https://huggingface.co/tejasvaidhya/bloom-3b-4bit-quant.bin/resolve/main/int4_fixed_zero.bin"),
     'bigscience/bloom-7b1': ModelUrlMap(
         cpp_model_name="bloom",
         int4_fixed_zero="https://huggingface.co/ayushk4/bigscience-.-bloom-7b1/resolve/main/int4_fixed_zero.bin"),
-
+    
     # GPT2
     'gpt2': ModelUrlMap(
         cpp_model_name="gpt2",
