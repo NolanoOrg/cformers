@@ -71,7 +71,7 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
         int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-6B-mono/resolve/main/int4-fixed-zero.bin"),
     'Salesforce/codegen-16B-mono': ModelUrlMap(
         cpp_model_name="gptj",
-        int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-16B-mono/resolve/main/int4-fixed-zero.bin"),
+        int4_fixed_zero="https://huggingface.co/kamalojasv/Salesforce-.-codegen-16B-mono/resolve/main/int4-fixed-zero"),
 
     # Bloom
     'bigscience/bloom-560m': ModelUrlMap(
