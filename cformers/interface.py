@@ -63,6 +63,9 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
     'EleutherAI/gpt-j-6B': ModelUrlMap(
         cpp_model_name="gptj",
         int4_fixed_zero="https://huggingface.co/ayushk4/EleutherAI-.-gpt-j-6B/resolve/main/int4_fixed_zero.bin"),
+    'Salesforce/codegen-350M-mono': ModelUrlMap(
+        cpp_model_name="gptj",
+        int4_fixed_zero="https://huggingface.co/jncraton/Salesforce-.-codegen-350M-mono/resolve/main/int4_fixed_zero.bin"),
     'Salesforce/codegen-2B-mono': ModelUrlMap(
         cpp_model_name="gptj",
         int4_fixed_zero="https://huggingface.co/ayushk4/Salesforce-.-codegen-2B-mono/resolve/main/int4-fixed-zero.bin"),
