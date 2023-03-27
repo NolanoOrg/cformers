@@ -6,6 +6,7 @@ import os
 import sys
 import select
 import wget
+import requests
 
 import transformers as tf # RIP TensorFlow
 
@@ -16,6 +17,34 @@ if "CFORMERS_CACHE_PATH" in os.environ:
     CFORMERS_CACHE_PATH = os.environ["CFORMERS_CACHE_PATH"]
 else:
     CFORMERS_CACHE_PATH = os.path.join(os.path.expanduser("~"), ".cformers")
+
+def compare_file_hash_sha256(local_file, huggingface_url):
+    # Get the local file hash sha256
+    with open(local_file, "rb") as f:
+        local_hash = hashlib.sha256(f.read()).hexdigest()
+    print(f"Local file hash: {local_hash}")
+    
+    # Get the huggingface file hash sha256
+    response = requests.get(huggingface_url)
+    
+    if response.status_code == 200:
+        hash_pattern = re.compile(r'\b([a-fA-F\d]{64})\b')
+        for line in response.text.split('\n'):
+            match = hash_pattern.search(line)
+            if match:
+                break  # Stop searching after the first match
+        huggingface_hash = match.group(1)
+        print(f"HuggingFace file hash: {huggingface_hash}")
+        print(f"Local file hash: {local_hash}")
+    else:
+        print(f"Error: Could not get the file hash from HuggingFace. Status code: {response.status_code}")
+        return
+    
+    # Compare the hashes
+    if local_hash == huggingface_hash:
+        print("The hashes match.")
+    else:
+        print("The hashes do not match.")
 
 class ModelUrlMap:
     """Stores the URL mapping for various models."""
@@ -134,7 +163,9 @@ class AutoInference:
             wget.download(self.model_url, self.model_save_path, bar=bar_progress)
 
             print("Download complete!")
-        # TODO: Check the hash sum of the downloaded model
+            compare_file_hash_sha256(self.model_save_path, self.model_url.replace("resolve", "blob"))
+
+        
 
     def generate(self,
                  prompt,
@@ -162,8 +193,13 @@ class AutoInference:
             f"Prompt should be a list of integers {prompt}"
         # Convert to a string of space separated integers
         prompt = " ".join([str(x) for x in prompt])
-
-        command = ["./cpp/main", self.cpp_model_name,
+        
+        if os.name == 'nt':
+            main_file = "./cpp/main.exe"
+        else:
+            main_file = "./cpp/main"
+            
+        command = [main_file, self.cpp_model_name,
                    "-m", self.model_save_path,
                    "--prompt", prompt,
                    "--seed", str(seed),
