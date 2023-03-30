@@ -197,7 +197,6 @@ clean:
 
 main: main.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) main.cpp ggml.o utils.o -o main $(LDFLAGS)
-	./main -h
 
 quantizeBloom: quantize_bloom.cpp ggml.o utils.o
 	$(CXX) $(CXXFLAGS) quantize_bloom.cpp ggml.o utils.o -o quantize_bloom $(LDFLAGS)
