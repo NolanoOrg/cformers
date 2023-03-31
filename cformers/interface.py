@@ -7,6 +7,7 @@ import sys
 import select
 import wget
 import requests
+import pathlib
 
 import transformers as tf # RIP TensorFlow
 
@@ -193,11 +194,13 @@ class AutoInference:
             f"Prompt should be a list of integers {prompt}"
         # Convert to a string of space separated integers
         prompt = " ".join([str(x) for x in prompt])
+
+        main_file = str(pathlib.Path(__file__).parent.resolve())
         
         if os.name == 'nt':
-            main_file = "./cpp/main.exe"
+            main_file += "/cpp/main.exe"
         else:
-            main_file = "./cpp/main"
+            main_file += "/cpp/main"
             
         command = [main_file, self.cpp_model_name,
                    "-m", self.model_save_path,
