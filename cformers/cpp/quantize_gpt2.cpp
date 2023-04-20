@@ -9,6 +9,7 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <system_error>
 #include <vector>
 #include <regex>
 
@@ -47,13 +48,15 @@ bool gpt2_model_quantize(const std::string & fname_inp, const std::string & fnam
 
     auto finp = std::ifstream(fname_inp, std::ios::binary);
     if (!finp) {
-        fprintf(stderr, "%s: failed to open '%s' for reading\n", __func__, fname_inp.c_str());
+        std::error_code ec(errno, std::generic_category());
+        fprintf(stderr, "%s: failed to open '%s' for reading: %s\n", __func__, fname_inp.c_str(), ec.message().c_str());
         return false;
     }
 
     auto fout = std::ofstream(fname_out, std::ios::binary);
     if (!fout) {
-        fprintf(stderr, "%s: failed to open '%s' for writing\n", __func__, fname_out.c_str());
+        std::error_code ec(errno, std::generic_category());
+        fprintf(stderr, "%s: failed to open '%s' for writing: %s\n", __func__, fname_out.c_str(), ec.message().c_str());
         return false;
     }
 
