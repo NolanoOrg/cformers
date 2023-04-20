@@ -1,2 +1,2 @@
 """Cformers: SoTA Transformer inference on your CPU."""
-from .interface import AutoModel, AutoTokenizer
+from .interface import AutoInference

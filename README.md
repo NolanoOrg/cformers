@@ -15,7 +15,7 @@ This project aims to address the third using LLaMa.cpp and GGML.
 
 - Inference Speed! Focus on inference, not training.
 - Precompressed models.
-- Minimal setup required - soon `pip install cformers` should be good to get started.
+- Minimal setup required - `pip install cformers` should be good to get started.
 - Easily switch between models and quantization types.
 - Support variety of prompts.
 
@@ -26,14 +26,12 @@ And most importantly:
 
 Setup
 ```bash
-pip install transformers wget
-git clone https://github.com/nolanoOrg/cformers.git
-cd cformers/cformers/cpp && make && cd ..
+pip install cformers
 ```
 
 Usage:
 ```python
-from interface import AutoInference as AI
+from cformers import AutoInference as AI
 ai = AI('EleutherAI/gpt-j-6B')
 x = ai.generate('def parse_html(html_doc):', num_tokens_to_generate=500)
 print(x['token_str'])
@@ -57,8 +55,6 @@ chat.py accepts the following parameteres:
 - ``` -t 100 ``` Number of tokens to generate 
 - ```-p Tell me a joke``` for a single prompt interaction
 - ```-m pythia``` to load one of the available (bloom, pythia or gptj )
-
-We are working on adding support for `pip install cformers.`
 
 Following Architectures are supported:
 - GPT-J
