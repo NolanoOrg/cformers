@@ -2324,13 +2324,13 @@ bool gptneox_eval(
         struct ggml_tensor * inpFF;
 
         if (hparams.use_parallel_residual == 0) {
-            printf("use_parallel_residual == 0\n");
+            //printf("use_parallel_residual == 0\n");
             // This takes the self-attention residual output as input to Feedforward
-            inpFF = ggml_add(ctx0, cur, inpL);
+            cur = ggml_add(ctx0, cur, inpL);
 
             // post attention layer norm
             {
-                inpFF = ggml_norm(ctx0, inpFF);
+                inpFF = ggml_norm(ctx0, cur);
 
                 // inpFF = input_layernorm_weight*inpFF + input_layernorm_bias
                 inpFF = ggml_add(ctx0,
@@ -2354,8 +2354,8 @@ bool gptneox_eval(
                 inpFF = ggml_add(ctx0, ggml_repeat(ctx0, model.layers[il].c_mlp_proj_b, inpFF), inpFF);
             }
 
-            // inpL = inpFF + inpL
-            inpL = ggml_add(ctx0, inpFF, inpL);
+            // inpL = inpFF + cur
+            inpL = ggml_add(ctx0, inpFF, cur);
 
         } else if (hparams.use_parallel_residual == 1) {
             // printf("use_parallel_residual == 1\n");
