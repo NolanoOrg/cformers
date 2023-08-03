@@ -41,13 +41,19 @@ if len(sys.argv) < 4:
 model_card = sys.argv[1]
 fname_out = sys.argv[2] + "/ggml-gptj-6b-model.bin"
 
-if "CONVERTER_CACHE_DIR" in os.environ:
-    dir_cache = os.environ["CONVERTER_CACHE_DIR"] + model_card.replace('/', '-.-')
-else:
-    dir_cache = "~/.cformers_converters" + model_card.replace('/', '-.-')
+if not os.path.exists(os.path.realpath(model_card)):
 
-if not os.path.exists(dir_cache):
-    os.makedirs(dir_cache)
+    if "CONVERTER_CACHE_DIR" in os.environ:
+        dir_cache = os.environ["CONVERTER_CACHE_DIR"] + model_card.replace('/', '-.-')
+    else:
+        dir_cache = "~/.cformers_converters" + model_card.replace('/', '-.-')
+
+    if not os.path.exists(dir_cache):
+        os.makedirs(dir_cache)
+        
+else:
+    dir_cache = os.path.realpath(model_card)
+
 
 # Fetch vocab.json from https://huggingface.co/<model_card>/resolve/main/vocab.json if not found in dir_cache/vocab.json
 if not os.path.exists(dir_cache + "/vocab.json"):

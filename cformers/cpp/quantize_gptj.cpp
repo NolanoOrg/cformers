@@ -103,11 +103,11 @@ bool gptj_model_quantize(const std::string & fname_inp, const std::string & fnam
         finp.read ((char *) &n_vocab, sizeof(n_vocab));
         fout.write((char *) &n_vocab, sizeof(n_vocab));
 
-        if (n_vocab != hparams.n_vocab) {
-            fprintf(stderr, "%s: invalid model file '%s' (bad vocab size %d != %d)\n",
-                    __func__, fname_inp.c_str(), n_vocab, hparams.n_vocab);
-            return false;
-        }
+        // if (n_vocab != hparams.n_vocab) {
+        //     fprintf(stderr, "%s: invalid model file '%s' (bad vocab size %d != %d)\n",
+        //             __func__, fname_inp.c_str(), n_vocab, hparams.n_vocab);
+        //     return false;
+        // }
 
         std::string word;
         for (int i = 0; i < n_vocab; i++) {

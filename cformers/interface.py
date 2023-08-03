@@ -1,5 +1,6 @@
 """Call's the C++ code from Python."""
 from subprocess import Popen, PIPE
+import subprocess
 import hashlib
 import re
 import os
@@ -7,6 +8,8 @@ import sys
 import select
 import wget
 import requests
+import pathlib
+import time
 
 import transformers as tf # RIP TensorFlow
 
@@ -144,17 +147,21 @@ MAP_MODEL_TO_URL = { # Replace "/" with "-.-" in the model name
 
 class AutoInference:
     """A wrapper for the C++ model."""
-    def __init__(self, model_name, hash_sum="", mode="int4_fixed_zero"):
+    def __init__(self, model_name, hash_sum="", mode="int4_fixed_zero",from_pretrained=""):
         self.model_name = model_name
         self.mode = mode
         self.hash_sum = hash_sum
         self.cpp_model_name = MAP_MODEL_TO_URL[model_name].cpp_model_name
-        self.model_url = MAP_MODEL_TO_URL[model_name].get_url(mode)
-        self.model_save_path = os.path.join(CFORMERS_CACHE_PATH, "models", model_name, mode)
-        self.tokenizer = tf.AutoTokenizer.from_pretrained(model_name)
+        if from_pretrained != "":
+            self.model_save_path = os.path.realpath(from_pretrained)
+            self.tokenizer = tf.AutoTokenizer.from_pretrained(os.path.dirname(from_pretrained))
+        else:
+            self.model_url = MAP_MODEL_TO_URL[model_name].get_url(mode)
+            self.model_save_path = os.path.join(CFORMERS_CACHE_PATH, "models", model_name, mode)
+            self.tokenizer = tf.AutoTokenizer.from_pretrained(model_name)
 
         # Download the model if it doesn't exist
-        if not os.path.exists(self.model_save_path):
+        if not os.path.exists(self.model_save_path) and self.from_pretrained == "":
             # Create the directory if it doesn't exist
             parent_dir = os.path.dirname(self.model_save_path)
             if not os.path.exists(parent_dir):
@@ -183,7 +190,9 @@ class AutoInference:
                  seed=42,
                  streaming_token_str_hook=lambda x: x,
                  streaming_token_ids_hook=lambda x: x,
-                 print_streaming_output=True):
+                 print_streaming_output=True,
+                 end_token=None,
+                 wait_for_process=False):
         """Generates text from the given prompt.
 
         streaming_output_hook: function to be called after every token is generated.
@@ -197,11 +206,13 @@ class AutoInference:
             f"Prompt should be a list of integers {prompt}"
         # Convert to a string of space separated integers
         prompt = " ".join([str(x) for x in prompt])
+
+        main_file = str(pathlib.Path(__file__).parent.resolve())
         
         if os.name == 'nt':
-            main_file = "./cpp/main.exe"
+            main_file += "/cpp/main.exe"
         else:
-            main_file = "./cpp/main"
+            main_file += "/cpp/main"
             
         command = [main_file, self.cpp_model_name,
                    "-m", self.model_save_path,
@@ -237,6 +248,9 @@ class AutoInference:
                     streaming_token_str_hook(token_str)
                     streaming_token_ids_hook(token_id)
                     to_print = token_str
+                    if token_str == end_token:
+                        all_stdout_so_far += "<END|>"
+                        break
                 else:
                     token_id_buffer += c.decode('utf-8')
 
@@ -263,12 +277,19 @@ class AutoInference:
         # return all_stdout_so_far
         token_line = re.findall(r'<\|BEGIN\>(.*?)<END\|>', all_stdout_so_far, re.DOTALL)[0]
 
+        print(token_line)
+
         # Convert the token_line to a list of integers
         all_tokens = [int(x) for x in token_line.split()]
 
         # Decode the tokens
         decoded_tokens = self.tokenizer.decode(all_tokens)
 
+        if not wait_for_process:
+            return {"success": True,
+                    "token_ids": all_tokens,
+                    "token_str": decoded_tokens}
+        
         # Get the exit code
         success = process.wait()
         # Kill the child process if it's still running
