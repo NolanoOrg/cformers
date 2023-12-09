@@ -99,6 +99,18 @@ ifeq ($(UNAME_M),$(filter $(UNAME_M),x86_64 i686))
 		ifneq (,$(findstring sse3,$(SSE3_M)))
 			CFLAGS += -msse3
 		endif
+		AVX512F := $(shell grep "avx512f " /proc/cpuinfo)
+		ifneq (,$(findstring sse3,$(AVX512F)))
+			CFLAGS += -mavx512f
+		endif
+		AVX512BW := $(shell grep "avx512bw " /proc/cpuinfo)
+		ifneq (,$(findstring sse3,$(AVX512BW)))
+			CFLAGS += -mavx512bw
+		endif
+		AVX512_VNNI := $(shell grep "avx512_vnni " /proc/cpuinfo)
+		ifneq (,$(findstring sse3,$(AVX512_VNNI)))
+			CFLAGS += -mavx512vnni
+		endif
 	else ifeq ($(UNAME_S),Haiku)
 		AVX1_M := $(shell sysinfo -cpu | grep "AVX ")
 		ifneq (,$(findstring avx,$(AVX1_M)))
